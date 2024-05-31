@@ -33,7 +33,7 @@ $ rosrun assignment_2_2023 action_client_node.py
 ## 1. Action Client Node: action_client_node.py
    This code is a Python script that uses the ROS framework to control a robot. The script creates an action client that sends goals to the /reaching_goal action server, and a subscriber to the /odom topic to receive Odometry messages, extracts information, and publishes a CustomMessage on the /custom_topic topic.
 
-## Pseudo code
+### Pseudo code
 ----------------------
 ```python
 #!/usr/bin/env python
