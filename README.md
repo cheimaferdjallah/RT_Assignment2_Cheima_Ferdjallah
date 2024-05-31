@@ -28,102 +28,64 @@ $ roslaunch assignment_2_2023 assignment1.launch
 $ rosrun assignment_2_2023 action_client_node.py
 ```
 # NODES
-1. Action Client Node: action_client_node.py
+----------------------
+# 1. Action Client Node: action_client_node.py
    This code is a Python script that uses the ROS framework to control a robot. The script creates an action client that sends goals to the /reaching_goal action server, and a subscriber to the /odom topic to receive Odometry messages, extracts information, and publishes a CustomMessage on the /custom_topic topic.
 
 ## Pseudo code
 ----------------------
 ```python
-Initialize picked_up_markers list
-Initialize reference_token as None
-Initialize ref_token_code as 0
-Initialize threshold distances a_th and d_th
+#!/usr/bin/env python
 
-Define drive function(speed, seconds):
-    Set robot motors power to speed
-    Sleep for seconds duration
-    Stop robot motors
-Define turn function(speed, seconds):
-    Set left motor power to speed
-    Set right motor power to -speed
-    Sleep for seconds duration
-    Stop robot motors
+Import rospy
+Import actionlib
+From assignment_2_2023.msg import PlanningAction, PlanningGoal, CustomMessage
+From nav_msgs.msg import Odometry
+From actionlib_msgs.msg import GoalStatus
 
-Define find_token function():
-    While no markers seen:
-        Turn robot right slightly
-        If no markers seen:
-            Continue loop
-    Print number of markers seen
-    Initialize marker as None
-    Initialize dist to a high value
-    Iterate over markers seen:
-        If marker is closer than dist and not picked or reference code:
-            Update dist, rot_y, and marker
-        If marker already picked or reference code:
-            Print "Already picked or reference"
-            Update marker
-    If no marker found or all markers picked:
-        Return None, -1, -1
-    Else:
-        Return marker, its distance, and angle
+Class ActionClientNode:
+    
+    Function __init__():
+        Initialize ROS node
+        Create action client
+        Wait for action server to become available
+        Initialize goal positions
+        Create subscribers and publishers
 
-Define save_reference_token function():
-    Find a token using find_token
-    If a token is found:
-        Set it as reference_token
-        Update ref_token_code
-        Print "Reference token saved"
-    Else:
-        Print "No token found"
+    Function set_goal(x, y):
+        Store goal position (x, y)
+        Create goal with target position (x, y)
+        Send goal to action server with feedback callback
 
-Define displace_token function():
-    Find markers in sight
-    Set found_it as False
-    Iterate over markers:
-        If marker code matches reference code:
-            Update reference_token and found_it
-            Break loop
-    If reference token found:
-        While token not displaced:
-            Get distance and angle to reference token
-            If distance is within threshold:
-                Release token and print "Released the token"
-                Set found_it to False
-                Break loop
-            Else:
-                Print "Not close enough"
-                Adjust robot's position towards reference token
-                Recursively call displace_token
-    Else:
-        Print "Reference token not found"
-        Adjust robot's position and call displace_token recursively
-        
-Main code
-Call save_reference_token
+    Function goal_done_callback(status, result):
+        If status is SUCCEEDED:
+            Log "Goal reached"
 
-Print reference_token code
-While true:
-    Get token, distance, and angle using find_token
-    If no token seen:
-        Print "No token found"
-        Turn right slightly
-    Else, if token within grabbing distance:
-        Print "Found it"
-        If able to grab token:
-            Print "Gotcha!"
-            Displace token
-            Drive backward
-            Turn left
-            Append token code to picked_up_markers
-            Print picked_up_markers
-    Else:
-        Print "Not close enough"
-        Adjust robot's position towards token
-    Adjust robot's position based on angle to token
-    If all markers picked:
-        Print "Done!"
-        Break loop
+    Function cancel_goal():
+        Cancel goal
+        Log "Goal cancelled"
+
+    Function odom_callback(odom_msg):
+        Extract relevant information from Odometry message
+        Create CustomMessage with extracted information
+        Publish CustomMessage on /custom_topic topic
+
+    Function main_loop():
+        While ROS is running:
+            Try:
+                Get target position from user input
+                Call set_goal function with user-input target position
+                Prompt user to cancel immediately or continue
+                If user wants to cancel:
+                    Call cancel_goal function
+            Except ValueError:
+                Log error message for invalid input
+
+Main:
+    Create ActionClientNode object
+    Run main loop
+    Keep ROS spinning
+
 ```
 
 
